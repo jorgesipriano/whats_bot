@@ -1,50 +1,28 @@
 1. Vá para a pasta do seu projeto:
-bash
-Copiar
-Editar
-cd ~/meu-bot
-✅ 2. Puxe as últimas atualizações do GitHub:
-Se você já clonou o repositório e está na branch correta:
 
-bash
-Copiar
-Editar
+cd ~/meu-bot
+
+✅ 2. Puxe as últimas atualizações do GitHub:
+
 git pull origin main
-Substitua main se estiver usando outra branch (ex: master ou dev).
 
 ✅ 3. (Opcional) Instale dependências novas (caso tenha adicionado algo novo):
-bash
-Copiar
-Editar
+
 npm install
+
 ✅ 4. Reinicie o processo do PM2:
-bash
-Copiar
-Editar
+
 pm2 restart meu-bot
 Ou veja o nome/código do processo com:
 
-bash
-Copiar
-Editar
+
 pm2 list
 e então:
 
-bash
-Copiar
-Editar
 pm2 restart <id ou nome>
 ✅ 5. Verifique se está tudo funcionando:
-bash
-Copiar
-Editar
+
 pm2 logs meu-bot
 Isso vai mostrar o log em tempo real.
 
-Se quiser que o bot reinicie automaticamente quando reiniciar o servidor:
 
-bash
-Copiar
-Editar
-pm2 startup
-pm2 save
