@@ -1,7 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { google } = require('googleapis');
-const fs = require('fs');
 const qrcode = require('qrcode-terminal');
+const fs = require('fs');
 
 const SHEET_ID = '11YZJ7jMPUzPPcG0KY-KdqOuluBKt0YLbxwUPU2wv4zk';
 const PEDIDOS_SHEET = 'Pedidos_confeitaria';
@@ -12,7 +12,7 @@ const CREDENTIALS_PATH = './automacaocasas-6608713e559b.json';
 async function authorizeGoogle() {
   const auth = new google.auth.GoogleAuth({
     keyFile: CREDENTIALS_PATH,
-    scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
   return await auth.getClient();
 }
@@ -23,17 +23,17 @@ async function buscarPrecoTotal(pedidoTexto) {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
-    range: `${CATALOGO_SHEET}!A:C`
+    range: `${CATALOGO_SHEET}!C:D`, // NOME COMPLETO e PREÇO
   });
 
   const catalogo = res.data.values;
   let total = 0;
 
-  for (let linha of catalogo.slice(1)) {
-    const [produto, precoStr, sabor] = linha;
+  for (let i = 1; i < catalogo.length; i++) {
+    const [nomeCompleto, precoStr] = catalogo[i];
     const preco = parseFloat(precoStr.replace(',', '.'));
-    const regex = new RegExp(`(\\d+)\\s*${produto.trim()}.*?${sabor.trim()}`, 'gi');
 
+    const regex = new RegExp(`(\\d+)\\s*${nomeCompleto}`, 'gi');
     let match;
     while ((match = regex.exec(pedidoTexto)) !== null) {
       const quantidade = parseInt(match[1]);
@@ -42,6 +42,37 @@ async function buscarPrecoTotal(pedidoTexto) {
   }
 
   return total;
+}
+
+async function addCliente(nome, endereco) {
+  const auth = await authorizeGoogle();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `${CLIENTES_SHEET}!A:C`,
+  });
+
+  const clientes = res.data.values || [];
+  const jaExiste = clientes.some(
+    ([, nomeExistente, enderecoExistente]) =>
+      nomeExistente?.toLowerCase() === nome.toLowerCase() &&
+      enderecoExistente?.toLowerCase() === endereco.toLowerCase()
+  );
+
+  if (!jaExiste) {
+    const id = Date.now().toString(36).toUpperCase();
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: `${CLIENTES_SHEET}!A:D`,
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: {
+        values: [[id, nome, endereco, dataHoje]],
+      },
+    });
+  }
 }
 
 async function addPedidoAoSheet(pedidoData) {
@@ -54,39 +85,13 @@ async function addPedidoAoSheet(pedidoData) {
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {
-      values: [pedidoData]
-    }
+      values: [pedidoData],
+    },
   });
 }
 
-async function cadastrarCliente(nome, endereco) {
-  const auth = await authorizeGoogle();
-  const sheets = google.sheets({ version: 'v4', auth });
-
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range: `${CLIENTES_SHEET}!B:C`
-  });
-
-  const clientes = res.data.values || [];
-  const nomesExistentes = clientes.map(row => row[0]?.toLowerCase().trim());
-
-  if (!nomesExistentes.includes(nome.toLowerCase().trim())) {
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: `${CLIENTES_SHEET}!A:C`,
-      valueInputOption: 'RAW',
-      insertDataOption: 'INSERT_ROWS',
-      requestBody: {
-        values: [[Date.now(), nome, endereco]]
-      }
-    });
-  }
-}
-
-// Bot WhatsApp
 const client = new Client({
-  authStrategy: new LocalAuth()
+  authStrategy: new LocalAuth(),
 });
 
 client.on('qr', (qr) => {
@@ -94,7 +99,7 @@ client.on('qr', (qr) => {
 });
 
 client.on('ready', () => {
-  console.log('✅ Bot está pronto!');
+  console.log('🤖 Bot está pronto!');
 });
 
 client.on('message', async (msg) => {
@@ -107,35 +112,37 @@ client.on('message', async (msg) => {
     const pedido = partes[2].trim();
     const dataHora = partes[3].trim();
     const total = await buscarPrecoTotal(pedido);
+    const totalFormatado = total.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
 
-    // Mensagem para cliente
-    const msgCliente = `✅ Seu pedido está confirmadíssimo!\n\n📦 Pedido: ${pedido}\n🕒 Entrega: ${dataHora}\n💰 Total: R$ ${total.toFixed(2)}\n💳 Qual a forma de pagamento?\n🔢 Pix: 31984915396`;
+    const status = 'Aguardando pagamento';
+    const obs = '';
+    const numeroPedido = Date.now().toString().slice(-6);
 
-    // Mensagem para controle interno
-    const numeroPedido = Math.floor(Math.random() * 1000000);
-    const msgInterna = `🧾 Pedido registrado!\n\nNº: ${numeroPedido}\nCliente: ${nome}\nPedido: ${pedido}\nData/Hora: ${dataHora}\nTotal Pedido: R$ ${total.toFixed(2)}\nEndereço: ${endereco}\nStatus: Aguardando pagamento\nObservações:`;
-
-    await msg.reply(msgCliente);
-    await msg.reply(msgInterna);
-
-    // Salva pedido na planilha
+    await addCliente(nome, endereco);
     await addPedidoAoSheet([
       numeroPedido,
       nome,
-      endereco,
       pedido,
       dataHora,
-      total.toFixed(2),
-      'Aguardando pagamento',
-      ''
+      totalFormatado,
+      endereco,
+      status,
+      obs,
     ]);
 
-    // Cadastra cliente se ainda não existir
-    await cadastrarCliente(nome, endereco);
+    await msg.reply(
+      `✅ Seu pedido está confirmadíssimo!\n\n📦 *Pedido:* ${pedido}\n🕒 *Entrega:* ${dataHora}\n💰 *Total:* ${totalFormatado}\n💳 Qual a forma de pagamento?\n🔢 Pix: 31984915396`
+    );
 
+    await msg.reply(
+      `🧾 *Pedido registrado!*\n\nNº: ${numeroPedido}\nCliente: ${nome}\nPedido: ${pedido}\nData/Hora: ${dataHora}\nTotal Pedido: ${totalFormatado}\nEndereço: ${endereco}\nStatus: ${status}\nObservações: ${obs}`
+    );
   } catch (error) {
-    console.error('❌ Erro ao processar a mensagem:', error);
-    msg.reply('❌ Ocorreu um erro ao registrar seu pedido. Tente novamente.');
+    console.error('Erro ao processar pedido:', error);
+    msg.reply('❌ Ocorreu um erro ao registrar seu pedido.');
   }
 });
 
