@@ -4,10 +4,10 @@ const fs = require('fs');
 const qrcode = require('qrcode-terminal');
 
 const SHEET_ID = '11YZJ7jMPUzPPcG0KY-KdqOuluBKt0YLbxwUPU2wv4zk';
-const SHEET_NAME = 'Pedidos_confeitaria';
+const PEDIDOS_SHEET = 'Pedidos_confeitaria';
+const CATALOGO_SHEET = 'Catalogo_produtos';
 const CREDENTIALS_PATH = './automacaocasas-6608713e559b.json';
 
-// Autenticação Google Sheets
 async function authorizeGoogle() {
   const auth = new google.auth.GoogleAuth({
     keyFile: CREDENTIALS_PATH,
@@ -16,14 +16,40 @@ async function authorizeGoogle() {
   return await auth.getClient();
 }
 
-// Adiciona pedido ao Google Sheets
+async function buscarPrecoTotal(pedidoTexto) {
+  const auth = await authorizeGoogle();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `${CATALOGO_SHEET}!A:C`
+  });
+
+  const catalogo = res.data.values;
+  let total = 0;
+
+  for (let linha of catalogo.slice(1)) {
+    const [produto, precoStr, sabor] = linha;
+    const preco = parseFloat(precoStr.replace(',', '.'));
+    const regex = new RegExp(`(\\d+)\\s*${produto.trim()}.*?${sabor.trim()}`, 'gi');
+
+    let match;
+    while ((match = regex.exec(pedidoTexto)) !== null) {
+      const quantidade = parseInt(match[1]);
+      total += quantidade * preco;
+    }
+  }
+
+  return total;
+}
+
 async function addPedidoAoSheet(pedidoData) {
   const authClient = await authorizeGoogle();
   const sheets = google.sheets({ version: 'v4', auth: authClient });
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: `${SHEET_NAME}!A:E`,
+    range: `${PEDIDOS_SHEET}!A:H`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {
@@ -32,7 +58,6 @@ async function addPedidoAoSheet(pedidoData) {
   });
 }
 
-// Bot WhatsApp
 const client = new Client({
   authStrategy: new LocalAuth()
 });
@@ -47,9 +72,6 @@ client.on('ready', () => {
 
 client.on('message', async (msg) => {
   try {
-    const chat = await msg.getChat();
-
-    // Formato esperado: Nome, Endereço, Pedido, Data Hora
     const partes = msg.body.split(',');
     if (partes.length < 4) return;
 
@@ -57,12 +79,37 @@ client.on('message', async (msg) => {
     const endereco = partes[1].trim();
     const pedido = partes[2].trim();
     const dataHora = partes[3].trim();
+    const total = await buscarPrecoTotal(pedido);
+    const totalFormatado = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    await addPedidoAoSheet([nome, endereco, pedido, dataHora, new Date().toLocaleString('pt-BR')]);
+    const numeroPedido = Math.floor(Math.random() * 1000000);
+    const status = 'Aguardando pagamento';
+    const observacoes = '';
 
-    msg.reply(`🍰 Pedido registrado com sucesso!\n\n📦 *Pedido:* ${pedido}\n👤 *Cliente:* ${nome}\n🏠 *Endereço:* ${endereco}\n🕒 *Entrega:* ${dataHora}`);
+    // Mensagem para cliente
+    const mensagemCliente = `✅ Seu pedido está confirmadíssimo!\n\n📦 *Pedido:* ${pedido}\n🕒 *Entrega:* ${dataHora}\n💰 *Total:* ${totalFormatado}\n💳 Qual a forma de pagamento?\n🔢 Pix: 31984915396`;
+
+    // Mensagem para controle interno
+    const mensagemInterna = `🧾 Pedido registrado!\n\nNº: ${numeroPedido}\nCliente: ${nome}\nPedido: ${pedido}\nData/Hora: ${dataHora}\nTotal Pedido: ${totalFormatado}\nEndereço: ${endereco}\nStatus: ${status}\nObservações: ${observacoes}`;
+
+    // Salvar no Google Sheets
+    await addPedidoAoSheet([
+      nome,
+      endereco,
+      pedido,
+      dataHora,
+      totalFormatado,
+      status,
+      observacoes,
+      new Date().toLocaleString('pt-BR')
+    ]);
+
+    await msg.reply(mensagemCliente);
+
+    const chat = await msg.getChat();
+    await chat.sendMessage(mensagemInterna);
   } catch (error) {
-    console.error('Erro ao registrar pedido:', error);
+    console.error('Erro ao processar mensagem:', error);
     msg.reply('❌ Ocorreu um erro ao registrar seu pedido. Tente novamente.');
   }
 });
