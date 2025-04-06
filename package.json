@@ -1,13 +1,13 @@
 {
-  "name": "whats_bot",
+  "name": "meu-bot",
   "version": "1.0.0",
-  "main": "test.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node test.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "moment-timezone": "^0.5.45",
+    "googleapis": "^105.0.0",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.23.0"
+    "whatsapp-web.js": "^1.21.1"
   }
 }
