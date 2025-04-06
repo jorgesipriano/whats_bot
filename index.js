@@ -13,7 +13,7 @@ const TEST_GROUP_NAME = "Teste_bot";
 const CREDENTIALS_PATH = path.join(__dirname, 'automacaocasas-6608713e559b.json');
 
 // Nome da planilha e abas
-const SPREADSHEET_ID = 'coloque_o_ID_da_planilha_aqui'; // <-- COLAR o ID da planilha aqui!
+const SPREADSHEET_ID = '11YZJ7jMPUzPPcG0KY-KdqOuluBKt0YLbxwUPU2wv4zk'; // <-- COLAR o ID da planilha aqui!
 const ABA_CLIENTES = 'Cadastro_Clientes';
 const ABA_PEDIDOS = 'Pedidos_confeitaria';
 
