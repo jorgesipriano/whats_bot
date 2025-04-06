@@ -5,6 +5,7 @@ const qrcode = require('qrcode-terminal');
 
 const SHEET_ID = '11YZJ7jMPUzPPcG0KY-KdqOuluBKt0YLbxwUPU2wv4zk';
 const PEDIDOS_SHEET = 'Pedidos_confeitaria';
+const CLIENTES_SHEET = 'Cadastro_Clientes';
 const CATALOGO_SHEET = 'Catalogo_produtos';
 const CREDENTIALS_PATH = './automacaocasas-6608713e559b.json';
 
@@ -44,8 +45,8 @@ async function buscarPrecoTotal(pedidoTexto) {
 }
 
 async function addPedidoAoSheet(pedidoData) {
-  const authClient = await authorizeGoogle();
-  const sheets = google.sheets({ version: 'v4', auth: authClient });
+  const auth = await authorizeGoogle();
+  const sheets = google.sheets({ version: 'v4', auth });
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
@@ -58,6 +59,32 @@ async function addPedidoAoSheet(pedidoData) {
   });
 }
 
+async function cadastrarCliente(nome, endereco) {
+  const auth = await authorizeGoogle();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `${CLIENTES_SHEET}!B:C`
+  });
+
+  const clientes = res.data.values || [];
+  const nomesExistentes = clientes.map(row => row[0]?.toLowerCase().trim());
+
+  if (!nomesExistentes.includes(nome.toLowerCase().trim())) {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: `${CLIENTES_SHEET}!A:C`,
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: {
+        values: [[Date.now(), nome, endereco]]
+      }
+    });
+  }
+}
+
+// Bot WhatsApp
 const client = new Client({
   authStrategy: new LocalAuth()
 });
@@ -80,36 +107,34 @@ client.on('message', async (msg) => {
     const pedido = partes[2].trim();
     const dataHora = partes[3].trim();
     const total = await buscarPrecoTotal(pedido);
-    const totalFormatado = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-    const numeroPedido = Math.floor(Math.random() * 1000000);
-    const status = 'Aguardando pagamento';
-    const observacoes = '';
 
     // Mensagem para cliente
-    const mensagemCliente = `✅ Seu pedido está confirmadíssimo!\n\n📦 *Pedido:* ${pedido}\n🕒 *Entrega:* ${dataHora}\n💰 *Total:* ${totalFormatado}\n💳 Qual a forma de pagamento?\n🔢 Pix: 31984915396`;
+    const msgCliente = `✅ Seu pedido está confirmadíssimo!\n\n📦 Pedido: ${pedido}\n🕒 Entrega: ${dataHora}\n💰 Total: R$ ${total.toFixed(2)}\n💳 Qual a forma de pagamento?\n🔢 Pix: 31984915396`;
 
     // Mensagem para controle interno
-    const mensagemInterna = `🧾 Pedido registrado!\n\nNº: ${numeroPedido}\nCliente: ${nome}\nPedido: ${pedido}\nData/Hora: ${dataHora}\nTotal Pedido: ${totalFormatado}\nEndereço: ${endereco}\nStatus: ${status}\nObservações: ${observacoes}`;
+    const numeroPedido = Math.floor(Math.random() * 1000000);
+    const msgInterna = `🧾 Pedido registrado!\n\nNº: ${numeroPedido}\nCliente: ${nome}\nPedido: ${pedido}\nData/Hora: ${dataHora}\nTotal Pedido: R$ ${total.toFixed(2)}\nEndereço: ${endereco}\nStatus: Aguardando pagamento\nObservações:`;
 
-    // Salvar no Google Sheets
+    await msg.reply(msgCliente);
+    await msg.reply(msgInterna);
+
+    // Salva pedido na planilha
     await addPedidoAoSheet([
+      numeroPedido,
       nome,
       endereco,
       pedido,
       dataHora,
-      totalFormatado,
-      status,
-      observacoes,
-      new Date().toLocaleString('pt-BR')
+      total.toFixed(2),
+      'Aguardando pagamento',
+      ''
     ]);
 
-    await msg.reply(mensagemCliente);
+    // Cadastra cliente se ainda não existir
+    await cadastrarCliente(nome, endereco);
 
-    const chat = await msg.getChat();
-    await chat.sendMessage(mensagemInterna);
   } catch (error) {
-    console.error('Erro ao processar mensagem:', error);
+    console.error('❌ Erro ao processar a mensagem:', error);
     msg.reply('❌ Ocorreu um erro ao registrar seu pedido. Tente novamente.');
   }
 });
