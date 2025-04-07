@@ -23,7 +23,7 @@ async function buscarPrecoTotal(pedidoTexto) {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
-    range: `${CATALOGO_SHEET}!C:D`, // NOME COMPLETO e PREÇO
+    range: `${CATALOGO_SHEET}!C:D`, // Nome completo e preço
   });
 
   const catalogo = res.data.values;
@@ -104,6 +104,11 @@ client.on('ready', () => {
 
 client.on('message', async (msg) => {
   try {
+    const chat = await msg.getChat();
+
+    // ✅ Responde apenas no grupo "Test_bot"
+    if (!chat.isGroup || chat.name !== 'Test_bot') return;
+
     const partes = msg.body.split(',');
     if (partes.length < 4) return;
 
@@ -111,13 +116,13 @@ client.on('message', async (msg) => {
     const endereco = partes[1].trim();
     const pedido = partes[2].trim();
     const dataHora = partes[3].trim();
+
     const total = await buscarPrecoTotal(pedido);
     const totalFormatado = total.toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     });
 
-    const status = 'Aguardando pagamento';
     const obs = '';
     const numeroPedido = Date.now().toString().slice(-6);
 
@@ -129,16 +134,16 @@ client.on('message', async (msg) => {
       dataHora,
       totalFormatado,
       endereco,
-      status,
+      '', // status removido
       obs,
     ]);
 
     await msg.reply(
-      `✅ Seu pedido está confirmadíssimo!\n\n📦 *Pedido:* ${pedido}\n🕒 *Entrega:* ${dataHora}\n💰 *Total:* ${totalFormatado}\n💳 Qual a forma de pagamento?\n🔢 Pix: 31984915396`
+      `✅ *Seu pedido foi registrado!*\n\n📦 *Pedido:* ${pedido}\n🕒 *Entrega:* ${dataHora}\n💰 *Total:* ${totalFormatado}\n💳 Qual a forma de pagamento?\n🔢 Pix: 31984915396`
     );
 
     await msg.reply(
-      `🧾 *Pedido registrado!*\n\nNº: ${numeroPedido}\nCliente: ${nome}\nPedido: ${pedido}\nData/Hora: ${dataHora}\nTotal Pedido: ${totalFormatado}\nEndereço: ${endereco}\nStatus: ${status}\nObservações: ${obs}`
+      `🧾 *Pedido salvo no sistema!*\n\nNº: ${numeroPedido}\nCliente: ${nome}\nPedido: ${pedido}\nData/Hora: ${dataHora}\nTotal Pedido: ${totalFormatado}\nEndereço: ${endereco}\nObservações: ${obs}`
     );
   } catch (error) {
     console.error('Erro ao processar pedido:', error);
