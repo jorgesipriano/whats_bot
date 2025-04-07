@@ -1,10 +1,13 @@
 {
   "name": "meu-bot",
   "version": "1.0.0",
+  "description": "Bot para WhatsApp com integração ao Google Sheets",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
+  "author": "Seu Nome",
+  "license": "MIT",
   "dependencies": {
     "googleapis": "^105.0.0",
     "qrcode-terminal": "^0.12.0",
