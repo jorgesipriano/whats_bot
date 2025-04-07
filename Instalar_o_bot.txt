@@ -1,4 +1,15 @@
 
 clonar o respositório 
-git clone https://github.com/seu-usuario/seu-repo.git
-cd seu-repo
+git clone https://github.com/jorgesipriano/whats_bot.git ~/meu-bot
+cd ~/meu-bot
+npm install
+
+jorge_eugenio_sipriano@instance-20250406-140347:~$ git clone https://github.com/jorgesipriano/whats_bot.git ~/meu-bot
+cd ~/meu-bot
+npm install
+
+
+
+----------------- caminho do JSON Excel --------------
+jorge_eugenio_sipriano@instance-20250406-140347:~/meu-bot$ ls ~/meu-bot/automacaocasas-6608713e559b.json
+/home/jorge_eugenio_sipriano/meu-bot/automacaocasas-6608713e559b.json
