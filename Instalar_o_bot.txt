@@ -1,5 +1,8 @@
 
-clonar o respositório 
+clonar o respositório sudo apt update
+sudo apt install git -y
+
+
 git clone https://github.com/jorgesipriano/whats_bot.git ~/meu-bot
 cd ~/meu-bot
 npm install
@@ -13,3 +16,5 @@ npm install
 ----------------- caminho do JSON Excel --------------
 jorge_eugenio_sipriano@instance-20250406-140347:~/meu-bot$ ls ~/meu-bot/automacaocasas-6608713e559b.json
 /home/jorge_eugenio_sipriano/meu-bot/automacaocasas-6608713e559b.json
+
+gcloud compute scp automacaocasas-6608713e559b.json jorge_eugenio_sipriano@meu-bot-free:~/meu-bot --zone=us-central1-a
