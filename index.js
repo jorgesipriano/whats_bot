@@ -10,12 +10,16 @@ const CATALOGO_SHEET = 'Catalogo_produtos';
 const CREDENTIALS_PATH = './automacaocasas-6608713e559b.json';
 
 async function authorizeGoogle() {
+  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+
   const auth = new google.auth.GoogleAuth({
-    keyFile: CREDENTIALS_PATH,
+    credentials: credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
+
   return await auth.getClient();
 }
+
 
 async function buscarPrecoTotal(pedidoTexto) {
   const auth = await authorizeGoogle();
