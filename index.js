@@ -20,7 +20,6 @@ async function authorizeGoogle() {
   return await auth.getClient();
 }
 
-
 async function buscarPrecoTotal(pedidoTexto) {
   const auth = await authorizeGoogle();
   const sheets = google.sheets({ version: 'v4', auth });
@@ -159,3 +158,16 @@ client.on('message', async (msg) => {
 });
 
 client.initialize();
+
+// ✅ Servidor HTTP para manter app vivo no Fly.io
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Bot WhatsApp rodando com sucesso!');
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Servidor rodando na porta ${PORT}`);
+});
