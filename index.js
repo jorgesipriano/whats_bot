@@ -14,15 +14,19 @@ async function authorizeGoogle() {
     throw new Error('❌ Variável GOOGLE_SERVICE_ACCOUNT_JSON não encontrada!');
   }
 
-  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+const path = require('path');
+
+async function authorizeGoogle() {
+  const keyPath = path.join(__dirname, 'credentials.json');
 
   const auth = new google.auth.GoogleAuth({
-    credentials,
+    keyFile: keyPath,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 
   return await auth.getClient();
 }
+
 
 async function buscarPrecoTotal(pedidoTexto) {
   const auth = await authorizeGoogle();
