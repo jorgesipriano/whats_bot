@@ -25,4 +25,8 @@ pm2 restart <id ou nome>
 pm2 logs meu-bot
 Isso vai mostrar o log em tempo real.
 
+---------------------- / / ----------- 
 
+enviar arquivos do pc local para meu server oracle 
+C:\Users\jorge.eugenio.junior\Downloads>scp -i "C:\Users\jorge.eugenio.junior\Downloads\minha-chave.pem" "C:\Users\jorge.eugenio.junior\Downloads\credentials.json" ubuntu@137.131.151.112:/home/ubuntu/meu-bot/
+credentials.json
