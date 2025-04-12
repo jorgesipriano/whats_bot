@@ -1,19 +1,23 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { google } = require('googleapis');
 const qrcode = require('qrcode-terminal');
-const fs = require('fs');
+const express = require('express');
+require('dotenv').config(); // Para carregar variáveis do arquivo .env
 
 const SHEET_ID = '11YZJ7jMPUzPPcG0KY-KdqOuluBKt0YLbxwUPU2wv4zk';
 const PEDIDOS_SHEET = 'Pedidos_confeitaria';
 const CLIENTES_SHEET = 'Cadastro_Clientes';
 const CATALOGO_SHEET = 'Catalogo_produtos';
-const CREDENTIALS_PATH = './automacaocasas-6608713e559b.json';
 
 async function authorizeGoogle() {
+  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    throw new Error('❌ Variável GOOGLE_SERVICE_ACCOUNT_JSON não encontrada!');
+  }
+
   const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
 
   const auth = new google.auth.GoogleAuth({
-    credentials: credentials,
+    credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
   });
 
@@ -93,11 +97,13 @@ async function addPedidoAoSheet(pedidoData) {
   });
 }
 
+// ✅ Cria o cliente do WhatsApp com persistência de sessão
 const client = new Client({
+  authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  }
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  },
 });
 
 client.on('qr', (qr) => {
@@ -159,8 +165,7 @@ client.on('message', async (msg) => {
 
 client.initialize();
 
-// ✅ Servidor HTTP para manter app vivo no Fly.io
-const express = require('express');
+// ✅ Servidor HTTP para manter app vivo (se usar monitoramento externo)
 const app = express();
 const PORT = process.env.PORT || 3000;
 
