@@ -1,0 +1,16 @@
+# Ignorar arquivos sensíveis
+credentials.json
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Ignorar logs
+logs/
+*.log
+
+# Ignorar dependências do Node.js
+node_modules/
+
+# Ignorar arquivos de configuração do sistema
+.env
+.DS_Store
+Thumbs.db
