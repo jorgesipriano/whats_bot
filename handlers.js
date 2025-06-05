@@ -43,18 +43,28 @@ async function buscarPrecoTotal(pedidoTexto) {
 
 async function handleMessage(msg, client) {
   try {
+    // Verificação defensiva para garantir que msg tem os métodos esperados
+    if (typeof msg.getChat !== 'function') {
+      console.error('msg.getChat não está disponível. Objeto msg:', msg);
+      return;
+    }
+    if (typeof msg.reply !== 'function') {
+      console.error('msg.reply não está disponível. Objeto msg:', msg);
+      return;
+    }
+
     const chat = await msg.getChat();
     const gruposPermitidos = ['Teste_bot']; // Adicione outros grupos aqui se quiser
 
+    // Processa apenas mensagens de grupo e dos grupos permitidos
     if (!chat.isGroup || !gruposPermitidos.includes(chat.name)) return;
 
-    // 🔁 Comando de verificação
-    if (msg.body.toLowerCase() === '/ping') {
+    // Comando simples de teste
+    if (msg.body && msg.body.toLowerCase() === '/ping') {
       await msg.reply('🏓 Pong! Bot ativo e saudável.');
       return;
     }
 
-    // 📝 Processamento de pedido
     const partes = msg.body.split(',');
     if (partes.length < 4) return;
 
@@ -79,7 +89,7 @@ async function handleMessage(msg, client) {
       totalFormatado,
       endereco,
       hoje,
-      '', // status
+      '',
       obs,
     ]);
 
@@ -92,8 +102,10 @@ async function handleMessage(msg, client) {
     );
 
   } catch (error) {
-    console.error('❌ Erro ao processar pedido:', error);
-    await msg.reply('❌ Ocorreu um erro ao registrar seu pedido.');
+    console.error('❌ Erro ao processar mensagem:', error);
+    if (typeof msg.reply === 'function') {
+      await msg.reply('❌ Ocorreu um erro ao processar sua mensagem.');
+    }
   }
 }
 

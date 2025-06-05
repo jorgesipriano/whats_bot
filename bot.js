@@ -1,4 +1,3 @@
-// bot.js
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
@@ -6,6 +5,7 @@ const client = new Client({
   authStrategy: new LocalAuth({ clientId: 'meu-bot' }),
   puppeteer: {
     headless: true,
+    executablePath: '/usr/bin/chromium-browser',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -14,8 +14,13 @@ const client = new Client({
       '--no-first-run',
       '--no-zygote',
       '--disable-gpu',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--disable-sync',
+      '--disable-translate'
     ],
-  },
+    timeout: 60000
+  }
 });
 
 client.on('qr', (qr) => {
