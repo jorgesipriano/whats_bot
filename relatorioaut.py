@@ -5,10 +5,10 @@ import json
 from datetime import datetime
 
 # Configurações
-SHEET_ID = '11YZJ7jMPUzPPcG0KY-KdqOuluBKt0YLbxwUPU2wv4zk'
-CREDENTIALS_FILE = 'credentials.json'
+SHEET_ID = '*********'
+CREDENTIALS_FILE = '******'
 ENDPOINT_BOT = 'http://localhost:3000/enviar-relatorio'
-WEBHOOK_DISCORD = 'https://discord.com/api/webhooks/1367827679122030656/96yTlvr388MTNapY3iNVwYaPrnQ0oilq73EpGA5tVi71fwz9_A99oqZV0DJgzrTrDbXy'
+WEBHOOK_DISCORD = '*************************'
 
 # Autenticando com Google Sheets
 scopes = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -46,7 +46,7 @@ def gerar_relatorio():
 
         data_atual = datetime.now().strftime('%d/%m/%Y')
         mensagem = (
-            f'📊 *Atualização Financeira Semanal - Doces da Morena*\n\n'
+            f'📊 *Atualização Financeira Semanal*\n\n'
             f'📅 *Data:* {data_atual}\n'
             f'💰 *Total de Vendas:* R$ {vendas:.2f}\n'
             f'💸 *Total de Gastos:* R$ {gastos:.2f}\n'
