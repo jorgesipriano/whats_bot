@@ -104,7 +104,7 @@ app.post('/enviar-relatorio', async (req, res) => {
     return res.status(400).json({ error: 'Mensagem não fornecida' });
   }
   try {
-    await enviarParaGrupo(client, 'DOCES DA MORENA EMPRESA', mensagem);
+    await enviarParaGrupo(client, '*********', mensagem);
     res.status(200).json({ status: 'Mensagem enviada com sucesso' });
   } catch (err) {
     console.error('❌ Erro ao enviar relatório:', err);
