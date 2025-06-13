@@ -54,7 +54,7 @@ async function handleMessage(msg, client) {
     }
 
     const chat = await msg.getChat();
-    const gruposPermitidos = ['Teste_bot']; // Adicione outros grupos aqui se quiser
+    const gruposPermitidos = [*****']; // Adicione outros grupos aqui se quiser
 
     // Processa apenas mensagens de grupo e dos grupos permitidos
     if (!chat.isGroup || !gruposPermitidos.includes(chat.name)) return;
@@ -94,10 +94,10 @@ async function handleMessage(msg, client) {
     ]);
 
     await msg.reply(
-      `✅ *Seu pedido foi registrado!*\n\n📦 *Pedido:* ${pedido}\n🕒 *Entrega:* ${dataHora}\n📍 *Endereço:* ${endereco}\n💰 *Total:* ${totalFormatado}\n\n💳 Qual a forma de pagamento?\n🔢 Pix: 31984915396`
+      `✅ *Seu pedido foi registrado!*\n\n📦 *Pedido:* ${pedido}\n🕒 *Entrega:* ${dataHora}\n📍 *Endereço:* ${endereco}\n💰 *Total:* ${totalFormatado}\n\n💳 Qual a forma de pagamento?\n🔢******`
     );
 
-    await enviarParaGrupo(client, 'Teste_bot',
+    await enviarParaGrupo(client, '******',
       `📦 *Pedido registrado*\n👤 ${nome}\n🧾 ${pedido}\n💰 ${totalFormatado}\n🕒 ${dataHora}\n📍 ${endereco}`
     );
 
