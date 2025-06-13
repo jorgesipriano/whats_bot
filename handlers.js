@@ -3,7 +3,7 @@ const path = require('path');
 const { enviarParaGrupo } = require('./mensagens');
 const { addCliente, addPedidoAoSheet } = require('./sheets-utils');
 
-const SHEET_ID = '11YZJ7jMPUzPPcG0KY-KdqOuluBKt0YLbxwUPU2wv4zk';
+const SHEET_ID = '********';
 const CATALOGO_SHEET = 'Catalogo_produtos';
 
 async function authorizeGoogle() {
